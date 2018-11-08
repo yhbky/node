@@ -1,0 +1,194 @@
+案例练习,准备:
+            rht-vmctl  reset  classroom
+            rht-vmctl  reset  server
+	        rht-vmctl  reset  desktop
+######################################################
+
+案例1:为虚拟机 server 配置以下永久的静态地址参数
+– 主机名:server0.example.com
+– IP地址:172.25.0.11
+– 子网掩码:255.255.255.0
+– 默认网关:172.25.0.254
+– DNS服务器:172.25.254.254
+
+
+案例2：复制、粘贴、移动
+ 以root用户新建/example/目录，在此目录下新建nsd.txt文件，并进一步完成下列操作
+
+ 1）将“I love Study”写入到文件nsd.txt 
+ 2）将nsd.txt重命名为mylove.txt
+ 3）将/etc/passwd、/boot、/etc/group同时拷贝到/example/目录下
+ 4）将ifconfig命令的前两行内容，追加写入mylove.txt
+ 5）将主机名永久配置文件，拷贝到/example/目录下
+ 6）将DNS永久配置文件，拷贝到/example/目录下
+ 7）将开机自动挂载配置文件，拷贝到/example/目录下
+
+
+案例3:在server上操作,（MBR分区模式）规划分区
+ 添加一块80G的硬盘并规划分区：
+   划分2个10G的主分区；1个12G的主分区;1个20G的逻辑分区。
+   
+   
+
+案例4:在server上操作,分区使用
+
+1、案例3中新添加80G硬盘的第一个逻辑分区
+– 格式化成xfs文件系统，实现该分区开机自动挂载，挂载点为/mnt/xfs
+
+2、案例3中新添加80G硬盘的第一个主分区
+– 完成开机自动挂载，挂载点/mnt/mypart,文件系统为ext4
+
+
+案例5:虚拟机 server0操作，构建 LVM 存储
+
+– 新建一个名为 systemvg 的卷组 
+– 在此卷组中创建一个名为 vo 的逻辑卷，大小为8G 
+– 将逻辑卷 vo 格式化为 xfs 文件系统 
+– 将逻辑卷 vo 挂载到 /vo 目录，并在此目录下建立一个测试文件 votest.txt，内容为“I AM KING.” 
+– 实现逻辑卷vo开机自动挂载到/vo
+
+
+
+案例6:虚拟机 server0操作，构建 LVM 存储(修改PE大小)
+– 新的逻辑卷命名为 database，其大小为50个PE的大小，属于 datastore 卷组 
+– 在 datastore 卷组中其PE的大小为1M
+– 使用 EXT4 文件系统对逻辑卷 database 格式化，此逻辑卷应该在开机时自动挂载到 /mnt/database 目录
+ 
+
+
+案例7:虚拟机 server0操作，扩展逻辑卷
+
+– 将/dev/systemvg/vo逻辑卷的大小扩展到20G
+
+
+
+案例8: vim文本编辑器练习，命令模式下的基本操作（重点知识）
+
+ 1）将/etc/passwd的前20行，写入到文件/opt/pass20.txt 
+ 2）将/etc/shadow的前10行,追加写入到文件/opt/pass20.txt 
+
+ 2）利用/opt/pass20.txt，进项如下操作：
+    – 命令模式下移动光标：键盘上下左右键、Home键、End键
+    – 命令模式下行间跳转：到全文的第一行（1G或gg）、到全文的最后一行（G）、到全文的第10行（10G）
+    
+    – 命令模式下复制、粘贴：
+    	 复制1行（yy）、复制3行（3yy）
+    	 粘贴到当前行之后（小写p）
+
+    – 命令模式下删除：
+    	 删除单个字符（x）
+    	 删除到行首（d^）、删除到行尾（d$）
+    	 删除1行（dd）、删除3行（3dd）
+         
+    
+    – 命令模式下查找关键词： 
+    	 搜索（/word）切换结果（n、N）
+
+    – 补充：在命令模式下大写的C，可以删除光标之后，并且进入输入模式
+
+rht-vmctl  reset  classroom
+rht-vmctl  reset  server
+rht-vmctl  reset  desktop
+goserver
+7)mkdir /example/
+cp /etc/fstab /example/
+3.关闭虚拟机server
+ 利用图形为虚拟机server添加80G硬盘
+goserver
+lsblk
+ls /dev/vdc
+fdisk  /dev/vdc 
+   p 查看分区表
+   n 创建主分区----->回车----->回车---->回车----->在last结束时 +10G
+         连续创建2个10G主分区,1个12G的主分区
+      ......
+   n 创建扩展分区 
+         ----->回车---->起始回车----->结束回车  将所有空间给扩展分区
+   p 查看分区表
+   n 创建逻辑分区----->起始回车------>结束+12G
+   p 查看分区表
+   w 保存并退出
+lsblk
+4.mkfs.xfs /dev/vdc5
+blkid /dev/vdc5
+mkdir /mnt/xfs
+mount /dev/vdc5 /mnt/xfs
+df -h
+vim /etc/fstab
+/dev/vdc5 /mnt/xfs xfs defaults 0 0
+umount /mnt/xfs
+df -h
+mount -a
+df -h
+mkdir /mnt/mypart
+mount /dev/vdc1 /mnt/mypart
+df -h
+vim /etc/fstab
+/dev/vdc1 /mnt/mypart ext4 defaults 0 0
+umount /mnt/mypart
+df -h
+mount -a
+df -h
+5.vgcreate  systemvg  /dev/vdc1  /dev/vdc2
+vgs    
+pvs
+lvcreate -n vo -L 8G systemvg
+lvs
+vgs           
+ls -l /dev/systemvg/vo
+mkfs.xfs /dev/systemvg/vo
+blkid /dev/systemvg/vo
+mount /dev/systemvg/vo /vo
+touch /vo/votest.txt
+echo I AM KING > /vo/votest.txt
+vim /etc/fstab
+/dev/systemvg/vo /vo xfs defaults 0 0
+df -h
+mount -a
+df -h
+6.vgchange -s 1M systemvg
+lvcreate -L 50M -n database systemvg
+lvs
+mkfs.ext4 /dev/systemvg/database
+blkid /dev/systemvg/database
+vim /etc/fstab
+/dev/systemvg/database /mnt/database ext4 defaults 0 0
+df -h
+mount -a
+df -h
+7.一、卷组有足够的剩余空间
+1.扩展空间的大小
+[root@server0 ~]# vgs
+[root@server0 ~]# lvextend -L 20G /dev/systemvg/vo 
+[root@server0 ~]# lvs
+
+2.扩展文件系统的大小
+   resize2fs:扩展ext4文件系统
+   xfs_growfs:扩展xfs文件系统
+[root@server0 ~]# df  -h
+[root@server0 ~]# xfs_growfs /dev/systemvg/vo 
+[root@server0 ~]# df  -h
+
+二、卷组没有足够的剩余空间
+
+1.扩展卷组
+[root@server0 ~]# vgextend systemvg /dev/vdc3
+[root@server0 ~]# vgs
+
+2.扩展空间的大小
+[root@server0 ~]# vgs
+[root@server0 ~]# lvextend -L 20G /dev/systemvg/vo
+[root@server0 ~]# lvs
+
+3.扩展文件系统的大小
+[root@server0 ~]# df  -h
+[root@server0 ~]# xfs_growfs /dev/systemvg/vo 
+[root@server0 ~]# df  -h
+
+1)head -20 /etc/passwd > /opt/pass20.txt
+2)head -10 /etc/shadow >> /opt/pass20.txt
+2)vim /opt/pass20.txt
+
+
+
+
